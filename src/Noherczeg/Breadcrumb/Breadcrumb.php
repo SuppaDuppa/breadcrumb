@@ -380,6 +380,52 @@ class Breadcrumb
             throw new OutOfRangeException("Invalid argument provided, no segment is present with id: $id!");
         }
     }
+    
+    /**
+     * replace: replaces the information of an existing segment
+     *
+     * @param $id String $id The ID of the required Segment.
+     * @param mixed $raw_name set it to null to keep the old url or
+     *                        set name of the appendable Segment
+     * @param boolean $base true if it is referring to the base url
+     * @param mixed $translate Set to true if you want to use the provided dictionary,
+     *                         set to false if you want to skip translation, or
+     *                         set to a specific string to assign that value
+     * @param bool $disabled
+     * @return \Noherczeg\Breadcrumb\Breadcrumb
+     * @throws \OutOfRangeException
+     */
+    public function replace($id, $raw_name = null, $base = false, $translate = true, $disabled = false)
+    {
+        if (in_array($id, array_keys($this->segments))) {
+
+            if (is_null($raw_name)) {
+                $segment = $this->segments[$id];
+            } else {
+                $segment = new Segment($raw_name, $base, $disabled);
+            }
+
+            // if translation is set
+            if ($translate) {
+                if (is_string($translate) && strlen($translate) > 0) {
+                    // we can set(override) the value manually
+                    $segment->setTranslated($translate);
+                } elseif (is_bool($translate)) {
+                    // or use the translator service to do it from a selected Dictionary
+                    $segment->setTranslated($this->translator->translate($raw_name));
+                }
+            } else {
+                $segment->setTranslated($raw_name);
+            }
+
+            // overwrite the segment
+            $this->segments[$id] = $segment;
+
+            return $this;
+        } else {
+            throw new OutOfRangeException("Invalid argument provided, no segment is present with id: $id!");
+        }
+    }
 
     /**
      * Builder method which returns with a result type as required.
